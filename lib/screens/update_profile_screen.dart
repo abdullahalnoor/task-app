@@ -1,24 +1,47 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../models/user_model.dart';
+import '../app_url.dart'; 
 
 class UpdateProfileScreen extends StatefulWidget {
-  const UpdateProfileScreen({super.key});
+  final UserModel user; 
+
+  const UpdateProfileScreen({super.key, required this.user});
 
   @override
   State<UpdateProfileScreen> createState() => _UpdateProfileScreenState();
 }
 
 class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
-  final emailCtrl = TextEditingController();
-  final firstNameCtrl = TextEditingController();
-  final lastNameCtrl = TextEditingController();
-  final mobileCtrl = TextEditingController();
-  final passwordCtrl = TextEditingController();
+  late TextEditingController emailCtrl;
+  late TextEditingController firstNameCtrl;
+  late TextEditingController lastNameCtrl;
+  late TextEditingController mobileCtrl;
 
-  Widget _input(String hint, TextEditingController controller,
-      {bool obscure = false}) {
+  bool loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    emailCtrl = TextEditingController(text: widget.user.email);
+    firstNameCtrl = TextEditingController(text: widget.user.firstName);
+    lastNameCtrl = TextEditingController(text: widget.user.lastName);
+    mobileCtrl = TextEditingController(text: widget.user.mobile);
+  }
+
+  @override
+  void dispose() {
+    emailCtrl.dispose();
+    firstNameCtrl.dispose();
+    lastNameCtrl.dispose();
+    mobileCtrl.dispose();
+    super.dispose();
+  }
+
+  Widget _input(String hint, TextEditingController controller) {
     return TextField(
       controller: controller,
-      obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
@@ -32,39 +55,58 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     );
   }
 
-  Widget _button() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF27AE60),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        onPressed: () {
-          // Example: print values
-          print(emailCtrl.text);
-          print(firstNameCtrl.text);
-          print(lastNameCtrl.text);
-          print(mobileCtrl.text);
-          print(passwordCtrl.text);
-        },
-        child: const Icon(Icons.arrow_forward),
-      ),
-    );
+  Future<void> _updateProfile() async {
+    setState(() => loading = true);
+
+    final Map<String, dynamic> body = {
+      'id': widget.user.id,
+      'email': emailCtrl.text,
+      'firstName': firstNameCtrl.text,
+      'lastName': lastNameCtrl.text,
+      'mobile': mobileCtrl.text,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(AppUrl.profileUpdate),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully')),
+        );
+        Navigator.pop(context, true); // return true to reload user data
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Update failed')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      setState(() => loading = false);
+    }
   }
 
-  @override
-  void dispose() {
-    emailCtrl.dispose();
-    firstNameCtrl.dispose();
-    lastNameCtrl.dispose();
-    mobileCtrl.dispose();
-    passwordCtrl.dispose();
-    super.dispose();
-  }
+  Widget _button() => SizedBox(
+    width: double.infinity,
+    height: 50,
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF27AE60),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: loading ? null : _updateProfile,
+      child: loading
+          ? const CircularProgressIndicator(color: Colors.white)
+          : const Text('Update Profile'),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -86,8 +128,6 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
               _input('Last Name', lastNameCtrl),
               const SizedBox(height: 16),
               _input('Mobile', mobileCtrl),
-              const SizedBox(height: 16),
-              _input('Password', passwordCtrl, obscure: true),
               const SizedBox(height: 30),
               _button(),
             ],

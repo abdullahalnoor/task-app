@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../controllers/task_controller.dart';
+import '../controllers/auth_controller.dart';
 import '../models/task_model.dart';
 import 'add_task_screen.dart';
 import 'update_task_screen.dart';
+import 'update_profile_screen.dart';
+import 'login_screen.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -54,7 +57,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
         ),
       ),
 
-
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF27AE60),
         onPressed: () async {
@@ -71,20 +73,64 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
+
   Widget header() => Container(
-    padding: const EdgeInsets.all(16),
-    color: const Color(0xFF27AE60),
-    child: const Row(
-      children: [
-        CircleAvatar(radius: 22),
-        SizedBox(width: 12),
-        Text(
-          "Task Dashboard",
-          style: TextStyle(color: Colors.white, fontSize: 18),
-        ),
-      ],
-    ),
-  );
+  padding: const EdgeInsets.all(16),
+  color: const Color(0xFF27AE60),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Row(
+        children: const [
+          CircleAvatar(radius: 22),
+          SizedBox(width: 12),
+          Text(
+            "Task Dashboard",
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+        ],
+      ),
+      Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white),
+            tooltip: "Edit Profile",
+            onPressed: () async {
+              if (AuthController.userModel != null) {
+                final updated = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UpdateProfileScreen(
+                      user: AuthController.userModel!,
+                    ),
+                  ),
+                );
+
+                if (updated == true) {
+             
+                  await AuthController.getUserData();
+                  setState(() {}); 
+                }
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: "Sign Out",
+            onPressed: () async {
+              await AuthController.clearUserData();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+            },
+          ),
+        ],
+      ),
+    ],
+  ),
+);
+
 
   Widget summary() => Container(
     padding: const EdgeInsets.all(12),
@@ -118,7 +164,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
       ],
     ),
   );
-
 
   Widget taskCard(TaskModel t) => Card(
     child: ListTile(
@@ -169,7 +214,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
       ),
     ),
   );
-
 
   BottomNavigationBar nav() => BottomNavigationBar(
     currentIndex: ["New", "Completed", "Canceled", "Progress"].indexOf(status),

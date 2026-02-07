@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'dashboard_screen.dart';
+import 'task_list_screen.dart';
 import '../app_url.dart';
 
 class SetPasswordScreen extends StatefulWidget {
@@ -47,7 +47,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       if (response.statusCode == 200 && (data['success'] ?? false)) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => const TaskListScreen()),
           (route) => false,
         );
       } else {
