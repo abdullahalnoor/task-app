@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-// import 'screens/dashboard_screen.dart'; 
-// import 'screens/add_task_screen.dart';
-// import 'screens/update_profile_screen.dart';
-// import 'screens/task_list_screen.dart';
+
 import 'screens/splash_screen.dart';
 
 void main() {
